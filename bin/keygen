@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+require 'pathname'
+
+$:.push File.expand_path("../../lib", __FILE__)
+require 'rsa.rb'
+include RSA
+
+abort "Usage: keygen bits" if ARGV.count != 1
+
+bits = ARGV.shift.to_i
+
+#puts RSA::keygen(p,q)
+
+#Ok... I need to generate p and q so their # of bits is half of bits
+
+goal_prime_strength = bits/2 #http://www.rsa.com/rsalabs/node.asp?id=2218
+
+p = 0
+q = 0
+while p == 0 || q == 0
+  #generate number
+  candidate = random_number(goal_prime_strength,30)
+  #giant number above is 2^1024
+  # puts candidate
+  #check primality
+  # puts candidate
+  if quick_fermat(candidate)
+    puts "Number passes fermat..."
+
+    if miller_rabin(candidate,3)
+      puts "Number passes miller rabin..."
+      if p == 0
+        p = candidate
+      else
+        #check gcd with p if p is set
+        q = candidate if RSA::euclid(p,candidate) == 1
+      end
+    else
+      puts "Number does not pass miller_rabin..."
+    end
+  else
+    # puts "Number does not pass fermat" removed to speed up processing slightly...
+  end
+  #set p or q
+end
+
+puts "P: #{p}\nQ: #{q}"
